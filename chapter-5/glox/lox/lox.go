@@ -10,16 +10,26 @@ import (
 var hadError = false
 
 func LoxMain(args []string) {
-	length := len(args)
+	var expr Expr
+	expr = NewBinary(
+		NewUnary(
+			NewToken(STAR, "-", nil, 1),
+			NewLiteral("123")),
+		NewToken(STAR, "*", nil, 1),
+		NewGrouping(
+			NewLiteral("45.67")))
 
-	if length > 1 {
-		fmt.Println("Usage: glox [script]")
-		os.Exit(64)
-	} else if length == 1 {
-		runFile(args[0])
-	} else {
-		runPrompt()
-	}
+	fmt.Println(NewAstPrinter().Print(expr))
+	// length := len(args)
+
+	// if length > 1 {
+	// 	fmt.Println("Usage: glox [script]")
+	// 	os.Exit(64)
+	// } else if length == 1 {
+	// 	runFile(args[0])
+	// } else {
+	// 	runPrompt()
+	// }
 }
 
 func runFile(filePath string) {

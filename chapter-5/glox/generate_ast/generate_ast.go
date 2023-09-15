@@ -35,12 +35,26 @@ func defineAst(outdir string, baseName string, types []string) {
 	// Create a bufio.Writer for efficient writing
 	writer := bufio.NewWriter(file)
 	writeContent(writer, `package main
-	type Expr interface {}
+	type Expr interface {
+		Accept (v Visitor) interface{}
+	}
 	`)
+
+	writeLine(writer, "type Visitor interface {")
 	for _, stype := range types {
 		substrings := strings.Split(stype, ":")
+		visitorFormatString := `Visit%s%s(%s %s) interface{}`
+		className := strings.ReplaceAll(strings.Title(substrings[0]), " ", "")
+		//line := "visit" + className + baseName + "(" + strings.ToLower(baseName) + " " + className + " )"
+		line := fmt.Sprintf(visitorFormatString, className, baseName, strings.ToLower(baseName), className)
+		writeLine(writer, line)
+	}
+	writeLine(writer, "}")
+	for _, stype := range types {
+		substrings := strings.Split(stype, ":")
+		className := strings.ReplaceAll(strings.Title(substrings[0]), " ", "")
 
-		defineType(writer, strings.Title(substrings[0]), substrings[1])
+		defineType(writer, className, substrings[1])
 	}
 	// Flush the buffer to ensure data is written to the file
 	err = writer.Flush()
@@ -60,13 +74,15 @@ func defineType(writer *bufio.Writer, className string, fields string) {
 			%s
 		}
 	}
+	func (a %s) Accept(visitor Visitor) interface{} {
+		return visitor.Visit%sExpr(a)
+	}
 	`
 	substrings := strings.Split(fields, ",")
 	fieldNames := ""
 	for _, field := range substrings {
 		f := strings.Split(field, " ")
 		fieldName := f[1]
-		fmt.Println(fieldName)
 		if fieldName != "" {
 
 			fieldNames = fieldNames + fieldName + ",\n"
@@ -74,13 +90,22 @@ func defineType(writer *bufio.Writer, className string, fields string) {
 	}
 
 	content := fmt.Sprintf(formatString, className, strings.ReplaceAll(fields, ",", "\n"), className,
-		fields, className, className, fieldNames)
+		fields, className, className, fieldNames, className, className)
 	writeContent(writer, content)
 }
 
 func writeContent(writer *bufio.Writer, content string) {
 	// Write content to the file
 	_, err := writer.WriteString(content)
+	if err != nil {
+		// panic as we don't handle errors
+		panic(err)
+	}
+}
+
+func writeLine(writer *bufio.Writer, line string) {
+	// Write content to the file
+	_, err := fmt.Fprintln(writer, line)
 	if err != nil {
 		// panic as we don't handle errors
 		panic(err)
