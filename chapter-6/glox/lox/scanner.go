@@ -153,8 +153,12 @@ func (s *Scanner) advance() rune {
 	return rune(s.source[s.current-1])
 }
 
-func (s *Scanner) addToken(tokenType TokenType, literal ...interface{}) {
+func (s *Scanner) addToken(tokenType TokenType, literals ...interface{}) {
 	text := s.source[s.start:s.current]
+	var literal interface{}
+	if len(literals) > 0 {
+		literal = literals[0]
+	}
 	s.tokens = append(s.tokens, NewToken(tokenType, text, literal, s.line))
 
 }
